@@ -52,6 +52,12 @@ Para una prueba privada sin dominio, configura `ERP_DOMAIN` como `:80`, `FRONTEN
 
 Docker no está instalado en el equipo de desarrollo, por lo que la compilación del contenedor debe verificarse al ejecutarla en el servidor destino.
 
+### Publicar en Render
+
+El archivo `render.yaml` crea un servicio Docker y una base de datos PostgreSQL privada, y configura `/api/health` como comprobación. En Render, conecta el repositorio GitHub `BrighanCrz/FerreteriaOportunidad`, selecciona **Blueprint** y confirma la lectura de `render.yaml`. Render pedirá el valor secreto `SEED_PASSWORD`: ingresa uno único de al menos 12 caracteres y guárdalo. Tras el despliegue, abre el enlace `onrender.com` que Render muestra para el servicio e inicia con el usuario `admin` y ese secreto; cambia la contraseña cuando el sistema lo solicite.
+
+La configuración usa un servicio `starter`, PostgreSQL `basic-256mb` y un disco persistente de 1 GB para archivos de respaldo. Son recursos de pago en Render; revisa el precio que Render muestra antes de confirmar la creación. El acceso de red a PostgreSQL queda privado. Los logs de compilación y arranque están en el servicio web, pestaña **Logs**. Si el Blueprint falla, copia el primer error rojo y unas 20 líneas anteriores y posteriores para diagnosticarlo.
+
 ## Instalación local
 
 1. Instala paquetes:

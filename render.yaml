@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: ferreteria-erp
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    disk:
+      name: ferroerp-backups
+      mountPath: /app/backend/backups
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: PG_DUMP_PATH
+        value: /usr/bin/pg_dump
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ferroerp-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_PASSWORD
+        sync: false
+      - key: FRONTEND_URL
+        fromService:
+          name: ferreteria-erp
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
+databases:
+  - name: ferroerp-db
+    databaseName: ferreteria_erp
+    user: ferroerp
+    plan: basic-256mb
+    region: oregon
+    postgresMajorVersion: "16"
+    ipAllowList: []

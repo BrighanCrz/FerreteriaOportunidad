@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.production.example
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.pnpm-store
+.runtime
+backups
+backend/backups
+backend/uploads

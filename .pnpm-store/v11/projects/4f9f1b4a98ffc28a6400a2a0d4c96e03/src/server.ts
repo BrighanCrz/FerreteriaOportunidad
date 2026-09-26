@@ -1,0 +1,20 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import path from 'node:path';
+import auth from './routes/auth';
+import core from './routes/core';
+import { authenticate } from './middleware/auth';
+import { errors, notFound } from './middleware/errors';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) throw new Error('Configura JWT_SECRET con al menos 32 caracteres.');
+const app=express();app.use(helmet());app.use(cors({origin:process.env.FRONTEND_URL||'http://localhost:5173'}));app.use(express.json({limit:'2mb'}));app.use(morgan('tiny'));app.use('/api/auth/login',rateLimit({windowMs:15*60*1000,limit:20,standardHeaders:true,legacyHeaders:false}));
+app.get('/api/health',(_req,res)=>res.json({status:'ok',service:'ferreteria-erp-api'}));app.use('/api/auth',auth);app.use('/api',authenticate,core);
+// Serve the compiled ERP from the API origin to keep local setup to one port and avoid CORS issues.
+const webDist=path.resolve(process.cwd(),'../frontend/dist');
+app.use(express.static(webDist));
+app.get(/.*/,(req,res,next)=>{if(req.path.startsWith('/api/'))return next();res.sendFile(path.join(webDist,'index.html'),err=>err&&next(err));});
+app.use(notFound);app.use(errors);
+const port=Number(process.env.PORT||4000);app.listen(port,()=>console.log(`API lista en http://localhost:${port}`));

@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ferreteria_erp}
+      POSTGRES_USER: ${POSTGRES_USER:-ferroerp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - ferreteria_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL in .env}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      SEED_PASSWORD: ${SEED_PASSWORD:?Set SEED_PASSWORD in .env}
+      PG_DUMP_PATH: /usr/bin/pg_dump
+    ports:
+      - "${ERP_BIND_ADDRESS:-127.0.0.1}:${ERP_HTTP_PORT:-4000}:4000"
+    volumes:
+      - ferroerp_backups:/app/backend/backups
+      - ferroerp_uploads:/app/backend/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      ERP_DOMAIN: ${ERP_DOMAIN:?Set ERP_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ferroerp_caddy_data:/data
+      - ferroerp_caddy_config:/config
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  ferreteria_postgres:
+  ferroerp_backups:
+  ferroerp_uploads:
+  ferroerp_caddy_data:
+  ferroerp_caddy_config:

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+backend/uploads/*
+backups/
+*.tsbuildinfo
+*.log
+.runtime/

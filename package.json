@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
-    "build": "pnpm --dir backend build && pnpm --dir frontend build",
+    "build": "cd backend && pnpm run build && cd ../frontend && pnpm run build",
     "db:generate": "pnpm --dir backend prisma generate",
     "db:migrate": "pnpm --dir backend prisma migrate dev",
     "db:seed": "pnpm --dir backend db:seed"

@@ -16,12 +16,9 @@ RUN pnpm install --frozen-lockfile \
 
 COPY . .
 
-RUN cd backend \
-    && pnpm prisma generate \
-    && cd .. \
+RUN pnpm exec prisma generate --schema=backend/prisma/schema.prisma \
     && pnpm run build \
-    && mkdir -p /app/backend/backups /app/backend/uploads
-    
+    && mkdir -p /app/backend/backups /app/backend/uploads    
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV PG_DUMP_PATH=/usr/bin/pg_dump
